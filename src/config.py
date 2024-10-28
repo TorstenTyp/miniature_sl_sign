@@ -1,6 +1,6 @@
 # Network 
-WIFI_NAME = 'BLEEP BLOOP'
-WIFI_PASSWORD = 'mot de passe'
+WIFI_NAME = 'WIFI NAME'
+WIFI_PASSWORD = 'WIFI PASSWORD'
 
 # Location
 STATION = "Hammarbyhöjden"
