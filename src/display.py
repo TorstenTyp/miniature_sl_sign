@@ -17,8 +17,6 @@ async def display_departures(departures):
     minutes_until_refresh = get_minutes_until_next_departure(departures)
     
     while count_down < minutes_until_refresh:
-        print(f'count_down: {count_down}')
-        print(f'minutes_until_refresh {minutes_until_refresh}')
         if 'Nu' in departures['departures'][0]['display']:
             first_string = f"{departures['departures'][0]['line']['id']} {departures['departures'][0]['destination']}{white_space}Nu"
         else:
