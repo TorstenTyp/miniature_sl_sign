@@ -1,6 +1,6 @@
 from wifi_connector import connect_to_wifi
-from departures import get_departures
-from display import display_departures, get_minutes_until_next_departure
+from api import get_departures
+from display import display_departures
 import config
 import uasyncio as asyncio
 from time import sleep

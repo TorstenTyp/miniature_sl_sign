@@ -13,33 +13,30 @@ white_space = '     '
 current_task = None
 
 async def display_departures(departures):    
+    sorted_departures = sort_departures(departures)
     count_down = 0
-    minutes_until_refresh = get_minutes_until_next_departure(departures)
+    minutes_until_refresh = get_minutes_until_next_departure(sorted_departures)
     
     while count_down < minutes_until_refresh:
-        if 'Nu' in departures['departures'][0]['display']:
-            first_string = f"{departures['departures'][0]['line']['id']} {departures['departures'][0]['destination']}{white_space}Nu"
+        if 'Nu' in sorted_departures[0]['time']:
+            first_string = f"{sorted_departures[0]['line']} {sorted_departures[0]['station']}{white_space}Nu"
         else:
-            first_string = f"{departures['departures'][0]['line']['id']} {departures['departures'][0]['destination']} {minutes_until_refresh - count_down} min"
+            first_string = f"{sorted_departures[0]['line']} {sorted_departures[0]['station']}{white_space}{minutes_until_refresh - count_down} min"
         
         second_string = ''
         
-        for departure in departures['departures']:
-            if departure != departures['departures'][0]:
-                if ':' in departure['display']:
-                    second_string += f"{departure['line']['id']} {departure['destination']} {departure['display']}{white_space}"
-                if 'Nu' in departure['display']:
-                   second_string += f"{departure['line']['id']} {departure['destination']} Nu{white_space}"
-                if 'min' in departure['display']:
-                    minutes = int(departure['display'][:-4])
-                    second_string += f"{departure['line']['id']} {departure['destination']} {minutes - count_down} min{white_space}"
+        for departure in sorted_departures:
+            if departure != sorted_departures[0]:
+                if ':' in departure['time']:
+                    second_string += f"{departure['line']} {departure['station']} {departure['time']}{white_space}"
+                if 'Nu' in departure['time']:
+                   second_string += f"{departure['line']} {departure['station']} Nu{white_space}"
+                if 'min' in departure['time']:
+                    minutes = int(departure['time'][:-4])
+                    second_string += f"{departure['line']} {departure['station']} {minutes - count_down} min{white_space}"
         
-        if '-' in second_string:
-            return
-        second_string = second_string[:-4]
         show_first_string(first_string)
         lcd.move_to(0, 1)
-        second_string = swedify_string(second_string)
         
         global current_task
         if current_task and not current_task.done():
@@ -54,7 +51,6 @@ def show_first_string(first_string):
     lcd.clear()
     lcd.move_to(0, 0)
     first_string = first_string[:-6] + (' ' * (display_width - len(first_string[:-6]) - 6)) + first_string[-6:]
-    first_string = swedify_string(first_string)
     lcd.putstr(first_string)
  
 async def show_second_string(original_string):
@@ -74,10 +70,27 @@ async def show_second_string(original_string):
             await asyncio.sleep(speed)
 
 def get_minutes_until_next_departure(departures):
-    if ':' in departures['departures'][0]['display']:
+    if ':' in departures[0]['time']:
         minutes_until_refresh = 10
-    if 'Nu' in departures['departures'][0]['display']:
+    if 'Nu' in departures[0]['time']:
         minutes_until_refresh = 1
-    if 'min' in departures['departures'][0]['display']:
-        minutes_until_refresh = int(departures['departures'][0]['display'][:-4])
+    if 'min' in departures[0]['time']:
+        minutes_until_refresh = int(departures[0]['time'][:-4])
     return minutes_until_refresh
+
+def sort_departures(departures):
+    departure_array = []
+
+    filtered_departures = [
+        departure for departure in departures['departures']
+        if not any(deviation['consequence'] == 'CANCELLED' for deviation in departure.get('deviations', []))
+    ]
+
+    sorted_departures = sorted(filtered_departures, key=lambda x: x['scheduled'])
+        
+    departure_strings = [
+        departure_array.append({"line": f"{departure['line']['id']}", "station": swedify_string(f"{departure['destination']}"), "time": f"{departure['display']}"}) 
+        for departure in sorted_departures
+    ]
+
+    return departure_array
